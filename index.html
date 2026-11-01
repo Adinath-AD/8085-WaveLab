@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8085 WaveLab – Digital Storage Oscilloscope</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">MICROPROCESSOR &amp; DAC LAB</p>
+      <h1>8085 <span>WaveLab</span></h1>
+      <p class="subtitle">Write 8085 assembly, execute it, and inspect the virtual DAC output on a DSO.</p>
+    </div>
+    <span class="status-pill" id="statusPill">Ready</span>
+  </header>
+
+  <main class="layout">
+    <section class="panel editor-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">01 / PROGRAM</p><h2>Assembly editor</h2></div>
+        <div class="example-picker">
+          <label for="exampleSelect">Example waveform</label>
+          <select id="exampleSelect">
+            <option value="triangle">1. Triangle</option>
+            <option value="square">2. Square</option>
+            <option value="ramp">3. Ramp / Sawtooth</option>
+          </select>
+          <button class="button button-quiet" id="loadExampleBtn">Load example</button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <label>Start address
+          <input id="startAddress" value="2000H" spellcheck="false">
+        </label>
+        <label>DAC output port
+          <input id="dacPort" value="00H" spellcheck="false">
+        </label>
+        <label>Reference voltage (V)
+          <input id="referenceVoltage" type="number" value="5" min="0.1" max="30" step="0.1">
+        </label>
+      </div>
+
+      <label class="editor-label" for="assemblyCode">8085 assembly code</label>
+      <textarea id="assemblyCode" spellcheck="false" autocapitalize="off" autocomplete="off">; TRIANGULAR WAVEFORM
+START: XRA A
+UP:    OUT 00H
+       INR A
+       CPI FFH
+       JNZ UP
+DOWN:  OUT 00H
+       DCR A
+       CPI 00H
+       JNZ DOWN
+       JMP START</textarea>
+
+      <div class="button-row">
+        <button class="button button-primary" id="runBtn">▶ Run</button>
+        <button class="button button-secondary" id="stepBtn">Step instruction</button>
+        <button class="button button-secondary" id="stopBtn">Stop</button>
+        <button class="button button-quiet" id="resetBtn">Reset</button>
+      </div>
+      <p class="hint">Run executes at most 100,000 instructions per run. The examples intentionally use continuous loops; press Stop to interrupt execution.</p>
+      <div id="messageBox" class="message-box info">Ready. Select an example or enter a program, then press Run.</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">02 / PROCESSOR</p><h2>8085 state</h2></div></div>
+      <div class="register-grid" id="registerGrid"></div>
+      <div class="flags-row" id="flagsRow"></div>
+      <div class="small-heading">Current instruction</div>
+      <div class="current-instruction" id="currentInstruction">Not started</div>
+      <div class="small-heading">Execution information</div>
+      <div class="metrics">
+        <div><span>Instructions executed</span><strong id="instructionCount">0</strong></div>
+        <div><span>DAC samples</span><strong id="sampleCount">0</strong></div>
+        <div><span>Program counter</span><strong id="pcValue">2000H</strong></div>
+      </div>
+    </section>
+
+    <section class="panel dso-panel">
+      <div class="panel-heading dso-heading">
+        <div><p class="eyebrow">03 / VIRTUAL INSTRUMENT</p><h2>Digital storage oscilloscope</h2></div>
+        <div class="dso-actions">
+          <button class="button button-primary" id="autoSetBtn">Auto Set</button>
+          <button class="button button-quiet" id="freezeBtn">Freeze</button>
+          <button class="button button-quiet" id="clearGraphBtn">Clear</button>
+        </div>
+      </div>
+
+      <div class="dso-controls">
+        <label>Time / division
+          <select id="timeBase">
+            <option value="0.1">0.1 ms</option><option value="0.2">0.2 ms</option>
+            <option value="0.5">0.5 ms</option><option value="1">1 ms</option>
+            <option value="2">2 ms</option><option value="5">5 ms</option>
+            <option value="10">10 ms</option><option value="20">20 ms</option>
+            <option value="50" selected>50 ms</option><option value="100">100 ms</option>
+            <option value="200">200 ms</option><option value="500">500 ms</option>
+            <option value="1000">1 s</option><option value="2000">2 s</option>
+          </select>
+        </label>
+        <label>Volts / division
+          <select id="voltsPerDiv">
+            <option value="0.05">0.05 V</option><option value="0.1">0.1 V</option>
+            <option value="0.2">0.2 V</option><option value="0.5">0.5 V</option>
+            <option value="1" selected>1 V</option><option value="2">2 V</option>
+            <option value="5">5 V</option><option value="10">10 V</option>
+          </select>
+        </label>
+        <label>Sample interval
+          <select id="sampleInterval">
+            <option value="0.1">0.1 ms</option><option value="0.2">0.2 ms</option>
+            <option value="0.5">0.5 ms</option><option value="1" selected>1 ms</option>
+            <option value="2">2 ms</option><option value="5">5 ms</option>
+            <option value="10">10 ms</option>
+          </select>
+        </label>
+        <label>Trigger level (V)
+          <input id="triggerLevel" type="number" value="2.5" step="0.1">
+        </label>
+        <label>Vertical position (V)
+          <input id="verticalOffset" type="number" value="2.5" step="0.1">
+        </label>
+      </div>
+
+      <div class="scope-readout">
+        <span><i class="scope-dot"></i> CH1 · DAC output</span>
+        <span id="scopeScaleReadout">1 V/div · 50 ms/div</span>
+        <span id="triggerReadout">Rising edge · Auto</span>
+      </div>
+      <div class="chart-wrap"><canvas id="waveChart"></canvas></div>
+      <p class="hint">Virtual DSO: the horizontal scale uses the selected simulated sample interval. It is not a cycle-accurate measurement of a physical 8085 or a real DAC.</p>
+      <div class="sample-summary" id="sampleSummary">No DAC samples yet. Run a program to acquire a waveform.</div>
+    </section>
+
+    <section class="panel measurement-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">04 / AUTOMATIC MEASUREMENTS</p><h2>Signal measurements</h2></div>
+        <span class="measurement-state" id="measurementState">Waiting for signal</span>
+      </div>
+      <div class="measurement-grid">
+        <div class="measurement-card"><span>Maximum voltage · Vmax</span><strong id="maxVoltage">--</strong></div>
+        <div class="measurement-card"><span>Minimum voltage · Vmin</span><strong id="minVoltage">--</strong></div>
+        <div class="measurement-card"><span>Peak-to-peak · Vpp</span><strong id="peakToPeak">--</strong></div>
+        <div class="measurement-card"><span>Average voltage · Vavg</span><strong id="averageVoltage">--</strong></div>
+        <div class="measurement-card"><span>RMS voltage · Vrms</span><strong id="rmsVoltage">--</strong></div>
+        <div class="measurement-card"><span>Frequency</span><strong id="frequencyValue">--</strong></div>
+        <div class="measurement-card"><span>Period</span><strong id="periodValue">--</strong></div>
+        <div class="measurement-card"><span>Duty cycle</span><strong id="dutyCycle">--</strong></div>
+      </div>
+      <p class="hint">Measurements are calculated from the waveform currently visible on the DSO screen. Frequency and period are estimated from rising threshold crossings.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">05 / MEMORY MAP</p><h2>Program listing</h2></div></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Address</th><th>Source</th><th>Bytes</th></tr></thead><tbody id="listingBody"><tr><td colspan="3">Assemble a program to see its listing.</td></tr></tbody></table>
+      </div>
+    </section>
+  </main>
+
+  <footer>8085 WaveLab · Educational simulator · DSO edition</footer>
+  <script src="simulator.js"></script>
+</body>
+</html>
