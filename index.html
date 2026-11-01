@@ -21,15 +21,7 @@
     <section class="panel editor-panel">
       <div class="panel-heading">
         <div><p class="eyebrow">01 / PROGRAM</p><h2>Assembly editor</h2></div>
-<select id="waveSelect">
-    <option value="triangle">Triangle Wave</option>
-    <option value="square">Square Wave</option>
-    <option value="ramp">Ramp Wave</option>
-</select>
-
-<button id="loadExampleBtn">
-    Load Example
-</button>
+        <button class="button button-quiet" id="loadExampleBtn">Load triangle example</button>
       </div>
 
       <div class="settings-row">
@@ -82,36 +74,22 @@ L2: OUT 00H
       </div>
     </section>
 
-<div class="dso-toolbar">
-
-    <button id="autoSetBtn">
-        Auto Set
-    </button>
-
-    <label>Trigger</label>
-    <input
-        id="triggerLevel"
-        type="number"
-        min="0"
-        max="255"
-        value="128">
-
-    <label>V/Div</label>
-    <select id="voltDiv">
-        <option value="0.5">0.5V</option>
-        <option value="1">1V</option>
-        <option value="2">2V</option>
-        <option value="5">5V</option>
-    </select>
-
-    <label>Time/Div</label>
-    <select id="timeDiv">
-        <option value="1">1x</option>
-        <option value="2">2x</option>
-        <option value="5">5x</option>
-    </select>
-
-</div>
+    <section class="panel chart-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">03 / VIRTUAL DAC</p><h2>Output waveform</h2></div>
+        <button class="button button-quiet" id="clearGraphBtn">Clear graph</button>
+      </div>
+      <div class="chart-wrap"><canvas id="waveChart"></canvas></div>
+      <p class="hint">Ideal 8-bit unipolar DAC model: Vout = (digital value / 255) × reference voltage. This is a simulation, not a physical voltage measurement.</p>
+      <div class="sample-summary" id="sampleSummary">No DAC samples yet.</div>
+    </section>
+<section class="panel measurement-panel">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">04 / SIGNAL ANALYSIS</p>
+      <h2>Waveform measurements</h2>
+    </div>
+  </div>
 
   <div class="measurement-grid">
     <div class="measurement-card">
