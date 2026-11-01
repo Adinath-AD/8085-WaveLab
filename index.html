@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8085 WaveLab</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">MICROPROCESSOR & DAC LAB</p>
+      <h1>8085 <span>WaveLab</span></h1>
+      <p class="subtitle">Write 8085 assembly. Execute it. Visualize the DAC output.</p>
+    </div>
+    <span class="status-pill" id="statusPill">Ready</span>
+  </header>
+
+  <main class="layout">
+    <section class="panel editor-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">01 / PROGRAM</p><h2>Assembly editor</h2></div>
+        <button class="button button-quiet" id="loadExampleBtn">Load triangle example</button>
+      </div>
+
+      <div class="settings-row">
+        <label>Start address
+          <input id="startAddress" value="2000H" spellcheck="false">
+        </label>
+        <label>DAC output port
+          <input id="dacPort" value="00H" spellcheck="false">
+        </label>
+        <label>Reference voltage
+          <input id="referenceVoltage" type="number" value="5" min="0.1" max="30" step="0.1">
+        </label>
+      </div>
+
+      <label class="editor-label" for="assemblyCode">8085 assembly code</label>
+      <textarea id="assemblyCode" spellcheck="false" autocapitalize="off">MVI A, 80H
+OUT 03H
+L3: XRA A
+L1: OUT 00H
+    INR A
+    CPI FFH
+    JNZ L1
+L2: OUT 00H
+    DCR A
+    CPI 00H
+    JNZ L2
+    JMP L3</textarea>
+
+      <div class="button-row">
+        <button class="button button-primary" id="runBtn">▶ Run</button>
+        <button class="button button-secondary" id="stepBtn">Step instruction</button>
+        <button class="button button-secondary" id="stopBtn">Stop</button>
+        <button class="button button-quiet" id="resetBtn">Reset</button>
+      </div>
+      <p class="hint">Run executes up to 100,000 instructions per click to prevent endless loops from freezing the browser. Use Stop to interrupt continuous execution.</p>
+      <div id="messageBox" class="message-box info">Ready. Load or enter a program, then press Run or Step instruction.</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">02 / PROCESSOR</p><h2>8085 state</h2></div></div>
+      <div class="register-grid" id="registerGrid"></div>
+      <div class="flags-row" id="flagsRow"></div>
+      <div class="small-heading">Current instruction</div>
+      <div class="current-instruction" id="currentInstruction">Not started</div>
+      <div class="small-heading">Execution information</div>
+      <div class="metrics">
+        <div><span>Instructions executed</span><strong id="instructionCount">0</strong></div>
+        <div><span>DAC samples</span><strong id="sampleCount">0</strong></div>
+        <div><span>Program counter</span><strong id="pcValue">2000H</strong></div>
+      </div>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">03 / VIRTUAL DAC</p><h2>Output waveform</h2></div>
+        <button class="button button-quiet" id="clearGraphBtn">Clear graph</button>
+      </div>
+      <div class="chart-wrap"><canvas id="waveChart"></canvas></div>
+      <p class="hint">Ideal 8-bit unipolar DAC model: Vout = (digital value / 255) × reference voltage. This is a simulation, not a physical voltage measurement.</p>
+      <div class="sample-summary" id="sampleSummary">No DAC samples yet.</div>
+    </section>
+<section class="panel measurement-panel">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">04 / SIGNAL ANALYSIS</p>
+      <h2>Waveform measurements</h2>
+    </div>
+  </div>
+
+  <div class="measurement-grid">
+    <div class="measurement-card">
+      <span>Maximum voltage</span>
+      <strong id="maxVoltage">--</strong>
+    </div>
+
+    <div class="measurement-card">
+      <span>Minimum voltage</span>
+      <strong id="minVoltage">--</strong>
+    </div>
+
+    <div class="measurement-card">
+      <span>Peak-to-peak voltage</span>
+      <strong id="peakToPeak">--</strong>
+    </div>
+
+    <div class="measurement-card">
+      <span>Average voltage</span>
+      <strong id="averageVoltage">--</strong>
+    </div>
+
+    <div class="measurement-card">
+      <span>Total samples</span>
+      <strong id="measurementSampleCount">0</strong>
+    </div>
+  </div>
+
+  <p class="hint">
+    Measurements are calculated from the DAC voltage samples generated
+    by the 8085 program.
+  </p>
+</section>
+```
+    <section class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">04 / MEMORY MAP</p><h2>Program listing</h2></div></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Address</th><th>Source</th><th>Bytes</th></tr></thead><tbody id="listingBody"><tr><td colspan="3">Assemble a program to see its listing.</td></tr></tbody></table>
+      </div>
+    </section>
+  </main>
+
+  <footer>8085 WaveLab · Educational simulator · Version 0.1</footer>
+  <script src="simulator.js"></script>
+</body>
+</html>
